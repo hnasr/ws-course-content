@@ -1,0 +1,4 @@
+in the chrome browser.. 
+
+let ws2 = new WebSocket("wss://localhost:8443/"); ws2.onmessage = msg => console.log(msg);
+
