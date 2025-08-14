@@ -33,7 +33,7 @@ websocket.on("request", request=> {
     connection.on("message", message => {
 
         console.log(`Received message ${message.utf8Data}`)
-        connection.send(`Server ${PORT} responded to your message: ${message.utf8Data}`)
+        connection.send(`Server ${PORT} responded to client ${request.socket.localPort} message: ${message.utf8Data}`)
     })
 
 

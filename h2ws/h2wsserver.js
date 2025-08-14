@@ -96,8 +96,8 @@ server.on('stream', (stream, headers) => {
             case OPC.TEXT: {
               textBuf = textBuf ? Buffer.concat([textBuf, payload]) : payload;
               if (fin) {
-                const msg = textBuf.toString('utf8');
-                console.log(`[client TEXT] ${msg}`);      // 👈 plain text from client
+                const msg = `From Server ${PORT} to client stream id ${stream.id} msg: ${textBuf.toString('utf8')}`
+                console.log(`[client TEXT] ${msg} `);      // 👈 plain text from client
                 send(OPC.TEXT, Buffer.from(msg, 'utf8')); // echo back
                 textBuf = null;
               }

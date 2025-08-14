@@ -1,0 +1,21 @@
+useful commands
+
+nginx -c /Users/HusseinNasser/projects/ws-course-content/conf/app.cfg
+
+//quit nginx
+nginx -s quit
+
+//kill all node
+pkill node
+
+spin node server
+node h1wss/wssserver.js 6443 &
+node h1wss/wssserver.js 7443 &
+node h1wss/wssserver.js 4443 &
+node h1wss/wssserver.js 5443 &
+
+
+//find all processes listening on a port
+
+lsof -nP -iTCP:8443 -sTCP:LISTEN
+kill (pid)
