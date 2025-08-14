@@ -1,0 +1,16 @@
+{
+  "dependencies": {
+    "https": "^1.0.0",
+    "websocket": "^1.0.35"
+  },
+  "name": "h1wss",
+  "version": "1.0.0",
+  "main": "wssserver.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}

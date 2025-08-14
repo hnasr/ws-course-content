@@ -1,0 +1,16 @@
+{
+  "name": "h1ws",
+  "version": "1.0.0",
+  "main": "server-raw.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "websocket": "^1.0.35",
+    "websockets": "^0.2.0"
+  }
+}
