@@ -11,7 +11,7 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}/h1wss/wssserver.js"
+            "program": "${workspaceFolder}/gamesystem/index.js"
         }
     ]
 }

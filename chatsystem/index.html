@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatting System</title>
+</head>
+<body>
+    <h1>Chatting System</h1>
+    Name: <input type = 'text' id = 'txtUser'>
+    <br>
+    <button id = 'btnJoin'>Join</button>
+    <select id = 'cmbRooms'>
+    </select>
+    <input type = 'text' id = 'txtMsg' value = 'chat here..'>
+    <button id = 'btnSend'>Send</button>
+
+    <textarea style="width:400px;height:300px" id = 'txtChat'>
+
+    </textarea>
+    <script>
+                //init code
+        const uuid = crypto.randomUUID();
+
+        // Return first 5 characters
+       
+        async function loadRooms () {
+            const cmbRooms = document.getElementById("cmbRooms")
+            const res = await fetch ("/rooms")
+            const j = await res.json();
+          
+
+            j.forEach( r=>  {
+                const option = document.createElement("option");
+                option.text = r;
+                option.value = r;
+                cmbRooms.add(option);
+            })
+
+
+        }
+        loadRooms()
+
+        document.getElementById("txtUser").value = uuid.slice(0, 5);
+        document.getElementById("btnSend").addEventListener("click", sendChat)
+        document.getElementById("btnJoin").addEventListener("click", joinRoom)
+
+        const user = document.getElementById("txtUser").value;
+        const txtChat = document.getElementById("txtChat");
+        let wsSocket; 
+
+
+        async function  joinRoom (){
+               //get currently selected room
+               room = document.getElementById("cmbRooms").options[document.getElementById("cmbRooms").selectedIndex].value;
+
+                if (wsSocket) wsSocket.close();
+                //create a websocket connection
+                const origin = window.location.origin;
+                //based on the server we connect to let us make sure we stick to the same server.
+                //best to give another indicator of the server to connect to.
+                wsSocket = new WebSocket("wss://localhost:" + room.split("_")[1])
+                wsSocket.onmessage = msg => {
+                    const msgJson = JSON.parse(msg.data);
+                    if (  msgJson.message ) 
+                       txtChat.value = txtChat.value + "\r\n" + msgJson.user + ": " + msgJson.message ; 
+                    
+                   console.log(msg.data)
+
+                }
+
+                wsSocket.onopen = c => wsSocket.send (JSON.stringify({"cmd": "join","room": room, "user": user}))
+                
+            }
+
+        async function sendChat() {
+           let msg =   document.getElementById("txtMsg").value
+           if (wsSocket)
+            wsSocket.send (JSON.stringify({"cmd": "chat", "room": room, "user": user, "message": msg}))
+        }
+    </script>
+</body>
+</html>
+
+

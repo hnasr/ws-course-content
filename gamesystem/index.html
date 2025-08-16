@@ -1,0 +1,218 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gaming System</title>
+    <style>
+
+.box {
+  width: 50px;
+  height: 50px;
+  border: 1px solid black;
+  text-align: center;
+  line-height: 50px; /* centers vertically */
+  font-size:40px;
+  font-weight: bold;
+  cursor:pointer;
+}
+    </style>
+</head>
+<body>
+    <h1>Gaming System</h1>
+    <br> 
+    <table>
+       <tr>
+     <td> <div class="box"  id = 'pred'  style="background-color:red;width:50px;height:50px;border:3px solid black"></div></td> 
+      <td>   <div class="box" id = 'pgreen'  style="background-color:green;width:50px;height:50px;border:3px solid black"></div></td> 
+      <td>    <div  class="box" id = 'ppurple'   style="background-color:purple;width:50px;height:50px;border:3px solid black"></div></td> 
+      <td>     <div  class="box" id = 'pblue'  style="background-color:blue;width:50px;height:50px;border:3px solid black"></div></td>
+      <td>     <div  class="box" id = 'pyellow'   style="background-color:yellow;width:50px;height:50px;border:3px solid black"></div></td>
+      </tr>
+ 
+
+    </table>
+
+
+    <div id = 'game'>
+
+    </div>
+    <a href ='/reset'>Reset game</a>
+    <script>
+
+ 
+        const game = "thegame"
+        // Return first 5 characters
+       document.getElementById("pred").addEventListener("click", (e) => {joinGame(e.target.style.backgroundColor)})
+       document.getElementById("pyellow").addEventListener("click", (e) => joinGame(e.target.style.backgroundColor))
+       document.getElementById("ppurple").addEventListener("click", (e) => joinGame(e.target.style.backgroundColor))
+       document.getElementById("pblue").addEventListener("click", (e) => joinGame(e.target.style.backgroundColor))
+       document.getElementById("pgreen").addEventListener("click", (e) => joinGame(e.target.style.backgroundColor))
+      
+
+       function addBottomBar(img, height = 10, color = 'rgba(255,0,0,0.8)' ) {
+          
+            // Create wrapper and preserve outer layout (copy margins)
+            const wrapper = document.createElement('div');
+            const cs = getComputedStyle(img);
+            wrapper.style.position = 'relative';
+            wrapper.style.display = (cs.display === 'block') ? 'block' : 'inline-block';
+            wrapper.style.margin = cs.margin;
+            img.style.margin = '0';
+
+            // Insert wrapper and move the image inside
+            img.parentNode.insertBefore(wrapper, img);
+            wrapper.appendChild(img);
+
+            // Make sizing predictable
+            img.style.display = 'block';      // remove baseline gap
+            // img.style.width = '100%';      // uncomment for responsive width
+
+            // Create the bottom bar
+            const bar = document.createElement('div');
+            Object.assign(bar.style, {
+            position: 'absolute',
+            left: 0,
+            right: 0,            // matches wrapper/image width automatically
+            bottom: 0,
+            height: `${height}px`,
+            background: color,
+            zIndex: 1,
+            pointerEvents: 'none' // clicks pass through (optional)
+            });
+            wrapper.appendChild(bar);
+            return bar;
+  }
+
+
+        async function loadGame () {
+
+            const game = document.getElementById("game")
+            const res = await fetch ("/items")
+            const j = await res.json();
+          
+
+            j.items.forEach( i=>  {
+                const img = document.createElement("img");
+                img.style.cursor="pointer"
+                img.src= i.url
+                img.style.width = "150px"
+                img.style.height = "150px"
+                img.style.border="3px solid black"
+                img.id = "img"+i.item
+                img.addEventListener("click", ()=> sendHit(i.item))
+                game.appendChild(img)
+                const hp = addBottomBar(img)
+                addBottomBar(img, 10, 'rgba(0,0,0,1)')
+                
+                hp.id = i.item;
+                hp.style.width=img.style.width
+                const w = 150
+                hp.style.width= (i.hp * w)/ 100 + "px";
+                if(i.hp == 0 )
+                    addOverlay(img, i.user)
+            })
+
+            j.players.forEach (p=>{
+                document.getElementById("p" + p).style.cursor = "not-allowed"
+                document.getElementById("p" + p).innerHTML = "X"
+            })
+
+        }
+        loadGame()
+ 
+    
+        let user;
+
+        let wsSocket; 
+  
+
+        async function  joinGame (color){ 
+                user= color
+                if (wsSocket) wsSocket.close();
+                //create a websocket connection
+                const origin = window.location.origin;
+                //based on the server we connect to let us make sure we stick to the same server.
+                //best to give another indicator of the server to connect to.
+                wsSocket = new WebSocket("wss://" + origin.replace("https://",""))
+                wsSocket.onmessage = msg => {
+                    const msgJson = JSON.parse(msg.data);
+                     //joined successully.
+                     if (  msgJson.cmd == "join" ) 
+                        {
+                            if (msgJson.status === "ok")
+                            {
+                                document.body.style.backgroundColor = msgJson.user
+ 
+                                msgJson.players.forEach (p=>{
+                                    document.getElementById("p" + p).style.cursor = "not-allowed"
+                                    document.getElementById("p" + p).innerHTML = "X"
+                                })
+                            }
+                                
+                            else 
+                                alert(msgJson.status)
+
+                        }
+                    //we got a hit 
+
+                    if (msgJson.cmd == "hit" ) 
+                    {
+                        const hp = document.getElementById(msgJson.item)   
+                        hp.hp = msgJson.hp
+                        if (msgJson.hp === 0){
+                             hp.user = msgJson.user
+                             const img = document.getElementById("img"+msgJson.item)  
+                             hp.style.width= "0px";  
+                             addOverlay(img, msgJson.user)
+                         }
+                        else
+                           hp.style.width= ((msgJson.hp * 150)/ 100) + "px";
+
+                    }
+                   console.log(msg.data)
+
+                }
+
+                wsSocket.onopen = c => wsSocket.send (JSON.stringify({"cmd": "join","game": game, "user": color}))
+                
+            }
+ 
+        async function sendHit(item) {
+            const hp = document.getElementById(item)   
+            //if hp is zero don't do anything
+            if (hp.hp === 0) return;
+
+            if (wsSocket)
+               wsSocket.send (JSON.stringify({"cmd": "hit", "game": game, "user": user, "item": item}))
+        }
+
+                
+            function addOverlay(imgElement, color = "red", opacity = 0.5) {
+            // Wrap the image in a container
+            const wrapper = document.createElement("div");
+            wrapper.style.position = "relative";
+            wrapper.style.display = "inline-block";
+
+            // Insert wrapper before the image and move image inside it
+            imgElement.parentNode.insertBefore(wrapper, imgElement);
+            wrapper.appendChild(imgElement);
+
+            // Create overlay
+            const overlay = document.createElement("div");
+            overlay.style.position = "absolute";
+            overlay.style.top = 0;
+            overlay.style.left = 0;
+            overlay.style.width = "100%";
+            overlay.style.height = "100%";
+            overlay.style.backgroundColor = color;
+            overlay.style.opacity = opacity;  // 👈 set opacity separately
+            overlay.style.pointerEvents = "none"; // clicks go through
+
+            // Add overlay on top of the image
+            wrapper.appendChild(overlay);
+            }
+    </script>
+</body>
+</html>
