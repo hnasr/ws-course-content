@@ -24,7 +24,6 @@ const websocket = new WebSocketServer({
 
 httpserver.listen(PORT, () => console.log(`My server is SECURED listening on port ${PORT}`))
 
-
 //when a legit websocket request comes listen to it and get the connection .. once you get a connection thats it! 
 websocket.on("request", request=> {
 

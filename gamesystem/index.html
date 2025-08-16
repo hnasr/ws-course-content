@@ -20,7 +20,7 @@
     </style>
 </head>
 <body>
-    <h1>Gaming System</h1>
+    <h1 id = 'h1'>Game ID: </h1>
     <br> 
     <table>
        <tr>
@@ -42,7 +42,8 @@
     <script>
 
  
-        const game = "thegame"
+        const gameId = "thegameid"
+        document.getElementById("h1").textContent = "Game ID " + gameId
         // Return first 5 characters
        document.getElementById("pred").addEventListener("click", (e) => {joinGame(e.target.style.backgroundColor)})
        document.getElementById("pyellow").addEventListener("click", (e) => joinGame(e.target.style.backgroundColor))
@@ -89,7 +90,7 @@
         async function loadGame () {
 
             const game = document.getElementById("game")
-            const res = await fetch ("/items")
+            const res = await fetch (`/items?gameId=${gameId}`)
             const j = await res.json();
           
 
@@ -145,14 +146,12 @@
                             {
                                 document.body.style.backgroundColor = msgJson.user
  
-                                msgJson.players.forEach (p=>{
+                            }
+                             
+                             msgJson.players.forEach (p=>{
                                     document.getElementById("p" + p).style.cursor = "not-allowed"
                                     document.getElementById("p" + p).innerHTML = "X"
                                 })
-                            }
-                                
-                            else 
-                                alert(msgJson.status)
 
                         }
                     //we got a hit 
@@ -175,7 +174,7 @@
 
                 }
 
-                wsSocket.onopen = c => wsSocket.send (JSON.stringify({"cmd": "join","game": game, "user": color}))
+                wsSocket.onopen = c => wsSocket.send (JSON.stringify({"cmd": "join","game": gameId, "user": color}))
                 
             }
  
@@ -185,11 +184,11 @@
             if (hp.hp === 0) return;
 
             if (wsSocket)
-               wsSocket.send (JSON.stringify({"cmd": "hit", "game": game, "user": user, "item": item}))
+               wsSocket.send (JSON.stringify({"cmd": "hit", "game": gameId, "user": user, "item": item}))
         }
 
                 
-            function addOverlay(imgElement, color = "red", opacity = 0.5) {
+function addOverlay(imgElement, color = "red", opacity = 0.5) {
             // Wrap the image in a container
             const wrapper = document.createElement("div");
             wrapper.style.position = "relative";

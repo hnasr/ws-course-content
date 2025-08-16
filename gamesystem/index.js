@@ -2,7 +2,7 @@ const https = require("https");
 const fs = require("fs")
 
 const PORT = process.argv[2] || 7443;
-const gameId = "thegame"
+const gameId = "game" + PORT
 const gameState = {}
 gameState[gameId] = {
     "items": [{
@@ -41,7 +41,10 @@ const httpserver = https.createServer({
 
     if (req.url =='/' ) {
         res.writeHead(200);
-        res.write(fs.readFileSync(__dirname + "/index.html"));
+        
+        const ind = fs.readFileSync(__dirname + "/index.html").toString()
+        
+        res.write(ind.replace("thegameid", gameId));
         res.end();
     }
 
@@ -63,7 +66,7 @@ const httpserver = https.createServer({
         res.end();
     }
 
-    if (req.url =='/items' ) {
+    if (req.url.includes("/items") ) {
         res.setHeader("Content-Type", "application/json")
         res.writeHead(200);
 
@@ -89,8 +92,9 @@ httpserver.listen(PORT, () => console.log(`My server is SECURED listening on por
 websocket.on("request", request=> {
 
     const connection = request.accept(null, request.origin)
-    
+    console.log("accepted a connection")
     connection.on("message", message => {
+        console.log(message)
         const msgObj = JSON.parse(message.utf8Data)
         //{"cmd": "chat", "room": room, "userId": user, "message": msg}
         if ( msgObj.cmd == "join") //join game request
@@ -106,7 +110,9 @@ websocket.on("request", request=> {
             users[msgObj.user] = connection;
             //update game
             gameState[gameId].players.push(msgObj.user)
-            connection.send(JSON.stringify({"cmd": "join", "status": "ok", "user": msgObj.user,"game": msgObj.game, "players": gameState[gameId].players} ) )
+            //send to everyone that someone joined
+            gameState[gameId].players.forEach (u => users[u].send( JSON.stringify({"cmd": "join", "game": msgObj.game, "user": msgObj.user, "players": gameState[gameId].players} )))
+            connection.send(JSON.stringify({"cmd": "join", "status": "ok", "user": msgObj.user,"game": msgObj.game} ) )
 
            
         }
@@ -123,7 +129,7 @@ websocket.on("request", request=> {
                 theItem.user=  msgObj.user //the winner
             }
             gameState[gameId].players.forEach (u => users[u].send( JSON.stringify({"cmd": "hit", "game": msgObj.game, "user": msgObj.user, "item": msgObj.item, "hp": theItem.hp} )))
-            connection.send(JSON.stringify({"cmd": "hit", "status": "ok"} ) )
+            connection.send(JSON.stringify({"cmd": "hit","game":msgObj.game,  "status": "ok"} ) )
         }
 
      })
